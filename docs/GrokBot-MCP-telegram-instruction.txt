@@ -1,0 +1,52 @@
+Checking the local copy so the writeup matches what’s actually on disk.
+
+Putting the recipe in chat. A couple of the file writes got blocked, so I’m still dropping it on disk next to the local copy.
+
+Stock npx -y @node2flow/telegram-bot-mcp does not start here. Pin MCP SDK 1.26.0 and launch a tiny local wrapper, not upstream dist/index.js.
+
+Why. @node2flow/telegram-bot-mcp@1.0.4 registers tools with raw JSON Schema. Its dep is @modelcontextprotocol/sdk@^1.26.0. Bare npx resolved 1.30.0, which throws at start: inputSchema must be a Zod schema or raw shape. Pinning 1.26.0 lets the process boot, but tools/call still dies with v3Schema.safeParseAsync is not a function if those JSON schemas are passed into registerTool. So: pin 1.26.0, and do not feed the package JSON schemas to the SDK.
+
+Where. On my computer:
+
+/workspace/mcp-telegram/
+  package.json     # pin + npm overrides
+  run.mjs          # live launcher (tg_get_me only)
+  node_modules/@modelcontextprotocol/sdk/          # 1.26.0
+  node_modules/@node2flow/telegram-bot-mcp/        # 1.0.4
+    dist/client.js   # used by run.mjs
+    dist/index.js    # upstream 27-tool server, not launched
+
+Token lives only in connector env TELEGRAM_BOT_TOKEN, not in these files.
+
+Recreate
+
+mkdir -p /workspace/mcp-telegram
+cd /workspace/mcp-telegram
+package.json (this is the pin):
+
+{
+  "name": "mcp-telegram-pin",
+  "private": true,
+  "dependencies": {
+    "@node2flow/telegram-bot-mcp": "1.0.4",
+    "@modelcontextprotocol/sdk": "1.26.0"
+  },
+  "overrides": {
+    "@modelcontextprotocol/sdk": "1.26.0"
+  }
+}
+npm install
+node -p "require('./node_modules/@modelcontextprotocol/sdk/package.json').version"
+That must print 1.26.0. Copy run.mjs from this folder (zero-arg tg_get_me via the package TelegramClient).
+
+Add the connector as:
+
+name: telegram
+command: node
+args: ["/workspace/mcp-telegram/run.mjs"]
+env: TELEGRAM_BOT_TOKEN=<bot token>
+Do not use npx -y @node2flow/telegram-bot-mcp. Smoke test: tg_get_me only. Expected: is_bot: true, username: Triage42Bot.
+
+If that package ships real Zod schemas, stock npx may work again and this pin can go.
+
+That’s the working recipe. The copy itself is /workspace/mcp-telegram (package.json is the pin, run.mjs is the live launcher).
