@@ -1,6 +1,4 @@
-Absolutely. I would make the demo deliberately **interactive first, autonomous second**. That gives the kid several visible “wow” moments before you introduce the recurring routine.
-
-Also, one clarification from the current docs: Grok Bot routines can run on the cloud computer while your laptop is closed, and the routine has an explicit **Test run** facility. ([X.AI Documentation][1])
+Grok Bot routines can run on the cloud computer while your laptop is closed, and the routine has an explicit **Test run** facility. ([X.AI Documentation][1])
 
 # 1. Prerequisites — everything prepared before the demo
 
