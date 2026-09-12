@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Демо: Календарь → Grok → Telegram-бот — заметки о запуске (2026-09-12)</title>
+<style>
+  :root {
+    --bg: #f4f3ef;
+    --card-bg: #ffffff;
+    --ink: #1f1d1a;
+    --muted: #6b675f;
+    --accent: #b3542a;
+    --accent-soft: #f0e2d9;
+    --step-bg: #eef2ee;
+    --step-border: #9fb89f;
+    --user-bg: #fbeee4;
+    --system-bg: #ece9f8;
+    --border: #e4e1d9;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 40px 16px 80px;
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .wrap {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  header {
+    margin-bottom: 32px;
+  }
+  header .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  h1 {
+    font-size: 26px;
+    margin: 6px 0 4px;
+    letter-spacing: -0.01em;
+  }
+  header .meta {
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  }
+  .card.setup {
+    background: var(--step-bg);
+    border-left: 4px solid var(--step-border);
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .card.setup .num {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--step-border);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .card.setup .txt { font-size: 15px; }
+  .card.system {
+    background: var(--system-bg);
+    border-left: 4px solid #8b83c9;
+    font-size: 14px;
+    color: #3d3763;
+  }
+  .card.system .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    color: #6b5fb0;
+    margin-bottom: 4px;
+    display: block;
+  }
+  .card.event-action {
+    background: var(--accent-soft);
+    border-left: 4px solid var(--accent);
+  }
+  .card.event-action .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 8px;
+    display: block;
+  }
+  ul.events {
+    margin: 0;
+    padding-left: 18px;
+  }
+  ul.events li {
+    margin-bottom: 6px;
+  }
+  ul.events li .when {
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .bubble {
+    display: flex;
+    margin-bottom: 14px;
+  }
+  .bubble .content {
+    max-width: 100%;
+    padding: 12px 16px;
+    border-radius: 14px;
+    font-size: 15px;
+    background: var(--user-bg);
+    border: 1px solid #eddccb;
+  }
+  .bubble .who {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .divider {
+    text-align: center;
+    margin: 28px 0 18px;
+    position: relative;
+    color: var(--muted);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .divider::before, .divider::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 38%;
+    height: 1px;
+    background: var(--border);
+  }
+  .divider::before { left: 0; }
+  .divider::after { right: 0; }
+  code, .token {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    background: #f1eee6;
+    padding: 1px 6px;
+    border-radius: 5px;
+    font-size: 0.9em;
+  }
+  footer {
+    margin-top: 36px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Заметки о прогоне демо</div>
+    <h1>Календарь → Grok → Telegram-бот</h1>
+    <div class="meta">12 сентября 2026 · Настройка бота, событий и ежедневной сводки</div>
+  </header>
+
+  <div class="card setup">
+    <div class="num">1</div>
+    <div class="txt">Создаём бота через <code>@BotFather</code>, записываем имя и токен</div>
+  </div>
+  <div class="card setup">
+    <div class="num">2</div>
+    <div class="txt">Готовим учётную запись Google</div>
+  </div>
+
+  <div class="bubble">
+    <div class="content">
+      <span class="who">Пользователь</span>
+      Ты — мой личный ассистент по календарю. Твоя задача — помогать мне отслеживать важные предстоящие события и отправлять полезные уведомления в мой Telegram.
+    </div>
+  </div>
+
+  <div class="card setup">
+    <div class="num">→</div>
+    <div class="txt">Подключаем календарь через plugin</div>
+  </div>
+
+  <div class="bubble">
+    <div class="content">
+      <span class="who">Пользователь</span>
+      Проверь, есть ли у тебя доступ к подключённому календарю. Ничего пока не меняй там. Какие события на завтра?
+    </div>
+  </div>
+
+  <div class="card event-action">
+    <span class="label">Добавить события</span>
+    <span style="font-size:13px; color:var(--muted); display:block; margin-bottom:8px;">Время московское, UTC+03:00</span>
+    <ul class="events">
+      <li><span class="when">Сегодня 16:00</span> — Тренировка по футболу</li>
+      <li><span class="when">Завтра 09:00</span> — Контрольная по естествознанию</li>
+      <li><span class="when">Завтра 15:30</span> — День рождения Алекса</li>
+      <li><span class="when">Вторник 12:00</span> — День рождения бабушки</li>
+      <li><span class="when">Среда 11:00</span> — Семейная поездка</li>
+    </ul>
+  </div>
+
+  <div class="bubble">
+    <div class="content">
+      <span class="who">Пользователь</span>
+      Теперь я хочу, чтобы ты отправлял сообщения в Telegram-бот со своего <em>облачного компьютера</em>. Имя бота <span class="token">@…</span>. Предоставь защищённое поле ввода, чтобы я ввёл токен.
+    </div>
+  </div>
+
+  <div class="card setup">
+    <div class="num">→</div>
+    <div class="txt">Вводим токен бота <span class="token">@…</span> → пишем сообщение боту → бот запоминает <code>chat_id</code></div>
+  </div>
+
+  <div class="bubble">
+    <div class="content">
+      <span class="who">Пользователь</span>
+      Кинь тестовое сообщение в Telegram.
+    </div>
+  </div>
+
+  <div class="bubble">
+    <div class="content">
+      <span class="who">Пользователь</span>
+      Хорошо. Найди приватный Telegram-чат с пользователем, которому ты только что отправил тестовое сообщение, и настрой этот чат как <strong>единственный</strong> пункт назначения напоминаний из календаря. Пока ничего не отправляй.
+    </div>
+  </div>
+
+  <div class="bubble">
+    <div class="content">
+      <span class="who">Пользователь</span>
+      Прочитай календарь и отправь сообщение в Telegram, содержащее только завтрашние события.
+    </div>
+  </div>
+
+  <div class="bubble">
+    <div class="content">
+      <span class="who">Пользователь</span>
+      Отправь то же самое, но отметь специальными emoji дни рождения.
+    </div>
+  </div>
+
+  <div class="bubble">
+    <div class="content">
+      <span class="who">Пользователь</span>
+      Если видишь в календаре дни рождения, предлагай три варианта поздравлений: дружелюбный, смешной и очень короткий. Включи эти варианты в сообщения в Telegram.
+    </div>
+  </div>
+
+  <div class="bubble">
+    <div class="content">
+      <span class="who">Пользователь</span>
+      Различай разные дни рождения по названию (имя человека, мужчина/женщина, папа/мама, бабушка/дедушка). Предлагай варианты поздравлений, соответствующие предполагаемому возрасту человека. Например, Алексу 10 лет.
+    </div>
+  </div>
+
+  <div class="bubble">
+    <div class="content">
+      <span class="who">Пользователь</span>
+      Пришли сводку из календаря на завтра и послезавтра.
+    </div>
+  </div>
+
+  <div class="bubble">
+    <div class="content">
+      <span class="who">Пользователь</span>
+      Исключи смешные варианты из поздравлений. Оставь дружелюбный и очень короткий.
+    </div>
+  </div>
+
+  <div class="divider">Настройка ежедневной процедуры</div>
+
+  <div class="bubble">
+    <div class="content">
+      <span class="who">Пользователь</span>
+      Итак, мы настроили посылку сводки из календаря в Telegram. Преврати то, что мы сделали, в повторяющуюся процедуру (routine). Каждый день проверяй календарь на предмет сегодняшних и завтрашних событий и присылай сводку по ним. Также отмечай важные семейные события (например, поездки) особым emoji.
+    </div>
+  </div>
+
+  <div class="bubble">
+    <div class="content">
+      <span class="who">Пользователь</span>
+      Временно измени расписание и посылай каждые 5 минут. Сообщай мне о каждой отправке. В процедуру добавь защиту: не слать повтор, если такая же сводка ушла меньше 4 минут назад.
+    </div>
+  </div>
+
+  <div class="bubble">
+    <div class="content">
+      <span class="who">Пользователь</span>
+      Скажи, откуда ты отправляешь эти сообщения?
+    </div>
+  </div>
+
+  <div class="bubble">
+    <div class="content">
+      <span class="who">Пользователь</span>
+      Отлично. Давай запланируем ещё пару отправок каждые 5 минут. Я сейчас выключу свой компьютер и проверю, что сообщения с твоего облачного компьютера в Telegram приходят. Когда я вернусь к тебе с результатом проверки, верни расписание процедуры на ежедневное.
+    </div>
+  </div>
+
+  <footer>Заметки о прогоне демо · Календарь → Grok → Telegram-бот</footer>
+</div>
+</body>
+</html>
