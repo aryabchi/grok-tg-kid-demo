@@ -1,6 +1,20 @@
 # Experiment Setup Plan: Grok Bot → Cursor Cloud Agent → My Machines Worker
 
+*Corrected version — 2026-09-15.*
+
 **Goal:** Verify, on a controlled repository, the Level-3 agentic pipeline discussed with Grok Bot as the outer/orchestrator agent, Cursor Cloud Agent as the coding agent, and a Cursor **My Machines** worker on the Windows laptop as the execution host.
+
+## Revision notes (2026-09-15)
+
+Changes from the 2026-09-14 draft, based on a documentation review against current Cursor and xAI sources:
+
+- Removed the optional model-comparison phase that was §10 — out of scope for now. Section numbers from the old §11 onward have shifted up by one.
+- §6's first Grok Bot task now explicitly names the target worker, repository, and branch, and asks Grok Bot to self-report which environment it actually used. Cursor's own My Machines docs only document `worker=`/`machine=` targeting for Slack, GitHub, and Linear triggers — Grok Bot isn't in that list — so targeting the right worker can't be assumed to happen implicitly.
+- §7 Layer D is now split into a **success path** and a **retry path**, verified separately, instead of one deliberate-failure test.
+- §3's networking checklist now includes `downloads.cursor.com`, a third required host Cursor documents that the original draft omitted.
+- §1 and §7 flag a documented reliability concern: recent Cursor community-forum reports describe Cloud Agents — including ones spawned by Grok Bot — not respecting a pinned default model/speed setting. Added a step to verify the actually-billed model rather than trusting the configured default.
+- Reference links updated from `prod.cursor.com` to the canonical `cursor.com` — no public documentation confirms `prod.cursor.com` as a stable public alias.
+- §10 (test the value of Grok as manager) is left unchanged pending further discussion — it still needs a concrete test design before it's actionable.
 
 **Reference architecture**
 
@@ -38,10 +52,11 @@ The key separation is:
 - [ ] Source-control integration required by Cloud Agent is configured (GitHub, GitLab, Azure DevOps, or Bitbucket as applicable).
 - [ ] Use a **test repository or disposable branch** for the first experiment.
 
-Cursor currently lists **Cloud Agents** and **Grok Bot access** on Pro. Pro also includes the Cursor Models pool containing Cursor Grok and Composer models.  
+Cursor currently lists **Cloud Agents** and **Grok Bot access** on Pro. Pro also includes the Cursor Models pool containing Cursor Grok and Composer models.
 References:
 - https://cursor.com/pricing
 - https://cursor.com/docs/models-and-pricing
+- https://cursor.com/docs/grok-bot
 
 ### Billing safety
 
@@ -54,9 +69,11 @@ Purpose: ensure that when included usage is exhausted, the experiment stops rath
 Cursor says on-demand usage must be explicitly enabled; when disabled, requests stop once included usage runs out.
 
 Reference:
-- https://prod.cursor.com/help/account-and-billing/overages
+- https://cursor.com/help/account-and-billing/overages
 
 **Do not enable on-demand merely to make Cloud Agent work.** Cloud Agents are available on paid plans; on-demand is for usage beyond the included allowance.
+
+Cursor also prompts you to set a spend limit the first time you use Cloud Agents at all — treat that prompt as part of this step, not a separate one.
 
 ### Cloud Agent model
 
@@ -65,11 +82,14 @@ Reference:
 - [ ] Do not rely on a changing/default routing choice for this experiment.
 - [ ] Use the model actually exposed in your current Cloud Agent UI. Examples may include **Composer Fast** or **Grok High**.
 - [ ] Record the exact model/variant shown in the UI.
+- [ ] **After each run, verify the actually-billed model in the Spending dashboard or run transcript — do not assume the pinned default was honored.**
 
 Cursor documents a Cloud Agent **Default model** setting: the selected model is used when a run does not specify one.
 
+⚠️ **Known reliability concern:** recent Cursor community-forum bug reports (Aug–Sep 2026) describe Cloud Agent runs not respecting the configured default model or Fast/effort setting — including at least one report specifically about Cloud Agents spawned by Grok Bot running in Fast mode despite a non-Fast default. These are unconfirmed forum reports, not acknowledged Cursor bugs, but given this experiment depends on knowing exactly which model ran, don't skip the verification step above.
+
 Reference:
-- https://prod.cursor.com/docs/cloud-agent/settings
+- https://cursor.com/docs/cloud-agent/settings
 
 ### Context window
 
@@ -166,6 +186,8 @@ agent worker start `
   --worker-dir "C:\path\to\test-repo"
 ```
 
+⚠️ Cursor's own examples show `--worker-dir` placed both after `start` (single directory) and before `start` (when the flag is repeated for multiple directories) — the combined `--name` + `--worker-dir` form above isn't shown verbatim in the docs. Run `agent worker start --help` once to confirm accepted flag order before the real attempt.
+
 The repo should have a valid Git remote. Cursor uses the worker's repository metadata when matching requests to a checkout.
 
 If the machine later serves multiple repositories, register each checkout explicitly.
@@ -191,10 +213,13 @@ No inbound port, public IP, or inbound VPN tunnel is required for the worker con
 Cursor currently lists these worker endpoints:
 
 ```text
-api2.cursor.sh
-api2direct.cursor.sh
-cloud-agent-artifacts.s3.us-east-1.amazonaws.com
+api2.cursor.sh                                    — agent session
+api2direct.cursor.sh                               — agent session
+downloads.cursor.com                               — CLI updates, first-time Computer Use install
+cloud-agent-artifacts.s3.us-east-1.amazonaws.com   — artifact uploads
 ```
+
+`downloads.cursor.com` was missing from the original host list — add it to the allowlist check. If blocked, the worker session itself keeps working, but CLI auto-updates fail silently, which can be confusing to debug later on a corporate network.
 
 The exact artifact host is needed for artifact uploads; the agent can otherwise continue operating if artifact upload is blocked, but screenshots/log references may be unavailable in PRs/dashboard.
 
@@ -206,7 +231,7 @@ Reference:
 
 Because this is a corporate Windows laptop/network:
 
-- [ ] Verify outbound HTTPS access to the required Cursor hosts.
+- [ ] Verify outbound HTTPS access to all four required Cursor hosts listed above.
 - [ ] Verify whether an HTTP(S) proxy is required.
 - [ ] If a proxy is required, configure `HTTPS_PROXY` / `https_proxy` in the worker environment.
 - [ ] Do not open inbound firewall ports for the worker.
@@ -307,16 +332,17 @@ xAI's current engineering guide explicitly describes Grok Bot creating/managing 
 
 Reference:
 - https://x.ai/bot/guides/grok-bot-for-engineering
+- https://cursor.com/docs/grok-bot/teams
 
 ### First Grok task
 
-Keep the first task tiny and easy to verify.
+Keep the first task tiny and easy to verify — but make every part of the execution target explicit. Cursor's own docs only document `worker=`/`machine=` targeting for Slack, GitHub, and Linear triggers, not for Grok Bot, so don't leave the target implicit and hope Grok Bot infers it correctly.
 
-Example:
+> Using Cursor Cloud Agent, start a run on my registered My Machines worker named `my-windows-laptop` — not a Cursor-hosted VM. Target repository `<git remote URL>`, branch `<branch name>`. In that checkout, create a file named `grok_cloud_worker_test.txt` containing: (1) the machine hostname, (2) the current git branch, (3) the git remote URL, (4) a one-line description of what you changed. Then run `<test command>` and report its exact output. Before you finish, explicitly confirm which worker/environment the Cloud Agent actually executed on.
 
-> Create a new file named `grok_cloud_worker_test.txt` in the test repository. Put the machine hostname, the current Git branch, and a one-line description of what you changed. Run a simple repository test afterwards and report the result.
+Fill in `<git remote URL>`, `<branch name>`, and `<test command>` with the values from your test repository before running this.
 
-The objective is not useful software yet. The objective is to prove the entire chain.
+The objective is not useful software yet. The objective is to prove the entire chain, including that Grok Bot actually targeted the named worker rather than defaulting to a Cursor-hosted VM.
 
 ---
 
@@ -335,23 +361,41 @@ Collect evidence at each layer.
 
 - [ ] Cloud Agent run exists in Cursor.
 - [ ] Exact model/variant is visible/recorded.
+- [ ] **Recorded model/variant matches the pinned default** — cross-checked against the Spending dashboard or run transcript, not just the settings page (see §1's known reliability concern).
 - [ ] Cloud Agent performed reasoning and issued tool calls.
 - [ ] Cloud Agent was associated with the intended repository.
 
 ### Layer C — My Machines worker
 
-- [ ] `my-windows-laptop` was selected/used.
+- [ ] `my-windows-laptop` was selected/used — confirmed both by Grok Bot's self-report (per §6's task prompt) and independently in the Cursor dashboard's run details.
 - [ ] Files changed on the physical laptop.
 - [ ] Shell commands executed on the laptop.
 - [ ] Test results came from the laptop environment.
 
 ### Layer D — Final feedback loop
 
-Test one deliberate failure.
+Test the success path and the retry path separately. A system that's simply eager to declare victory could pass a single naive test — you want evidence it correctly recognizes *both* "this succeeded" and "this needs fixing."
 
-For example, tell the agent to run a command that should fail and then recover.
+#### Success path
 
-Expected pattern:
+- [ ] Task has an unambiguous, checkable success criterion.
+- [ ] Cloud Agent completes on the first attempt, with no errors.
+- [ ] Grok Bot verifies success against the stated proof requirement — not just "the agent said it's done."
+- [ ] Grok Bot reports completion with proof (output, diff, or screenshot).
+- [ ] Grok Bot does **not** trigger unnecessary retries or follow-ups on a run that already succeeded.
+
+#### Retry path (deliberate failure)
+
+- [ ] Task is designed to deterministically fail on the first attempt — reproducible, not flaky.
+- [ ] First attempt fails as expected.
+- [ ] Failure output reaches Grok Bot (transcript/artifacts).
+- [ ] Grok Bot correctly identifies it as a failure, not a success.
+- [ ] Grok Bot reasons about the cause and sends a correction without you intervening.
+- [ ] Retry succeeds.
+- [ ] Grok Bot confirms the retry against the original proof requirement.
+- [ ] Record: number of retries, whether Grok Bot ever gave up and handed back to you, and total time.
+
+Expected pattern for the retry path:
 
 ```text
 Grok
@@ -373,7 +417,7 @@ success
 Grok observes proof
 ```
 
-This demonstrates the actual Level-3 feedback loop rather than merely remote task submission.
+This demonstrates the actual Level-3 feedback loop rather than merely remote task submission — and, tested against the success path too, shows the loop isn't just biased toward reporting success.
 
 ---
 
@@ -387,6 +431,7 @@ This demonstrates the actual Level-3 feedback loop rather than merely remote tas
 - [ ] Keep On-Demand Usage **OFF**.
 - [ ] Use a small, explicit task.
 - [ ] Pin a specific Cloud Agent model/variant.
+- [ ] Verify the actually-billed model/variant after each run rather than trusting the pinned setting.
 - [ ] Record the exact model, worker name, repo, branch, and result.
 
 ---
@@ -415,42 +460,16 @@ For first-party Cursor models, the relevant usage is in the Cursor Models pool. 
 
 References:
 - https://cursor.com/docs/models-and-pricing
-- https://prod.cursor.com/help/account-and-billing/overages
+- https://cursor.com/help/account-and-billing/overages
 - https://cursor.com/docs/cloud-agent
 
 ---
 
-## 10. Optional second phase: model comparison
+## 10. Optional phase: test the value of Grok as manager
 
-Once the pipeline works, repeat the same task with:
+*(Unchanged pending further discussion — needs a concrete test design before this is actionable.)*
 
-1. **Composer Fast**
-2. **Grok High**
-
-Keep the task and repository state as similar as possible.
-
-Record:
-
-| Metric | Composer Fast | Grok High |
-|---|---:|---:|
-| Task completed | | |
-| Time to completion | | |
-| Number of retries | | |
-| Tests passed | | |
-| Human intervention | | |
-| Included usage consumed | | |
-| Output quality | | |
-
-This separates two questions that should not be mixed:
-
-- Does the **Level-3 architecture** work?
-- Which **coding model** performs best inside it?
-
----
-
-## 11. Optional third phase: test the value of Grok as manager
-
-Compare:
+Once the pipeline works, compare:
 
 ### A. Direct Cloud Agent
 
@@ -479,7 +498,7 @@ This is the experiment that actually tests whether the **agent-managing-an-agent
 
 ---
 
-## 12. Expected final architecture
+## 11. Expected final architecture
 
 After successful setup:
 
@@ -529,19 +548,20 @@ Your existing Cursor IDE can remain unchanged.
 
 ---
 
-## 13. Success criteria
+## 12. Success criteria
 
 The experiment is successful only if all of these are demonstrated:
 
 - [ ] Pro account can create a Cloud Agent.
-- [ ] A specific Cloud Agent model/variant is pinned.
+- [ ] A specific Cloud Agent model/variant is pinned, and confirmed via the Spending dashboard/transcript rather than assumed.
 - [ ] On-Demand Usage remains OFF.
 - [ ] Windows laptop is registered as a My Machines worker.
 - [ ] Cursor can run a Cloud Agent directly on that worker.
 - [ ] The worker executes commands/files/tests locally.
 - [ ] Grok Bot can create/manage the Cursor Cloud Agent.
+- [ ] Grok Bot can target the named worker explicitly and confirms in its own report that it did so.
 - [ ] Grok Bot can cause useful work to be completed through that Cloud Agent on the worker.
-- [ ] Grok Bot can observe results and perform at least one follow-up/recovery cycle.
+- [ ] Grok Bot can observe results, correctly distinguish success from failure, and perform at least one follow-up/recovery cycle when needed.
 - [ ] No inbound connection to the laptop is required.
 - [ ] No unexpected paid usage occurs.
 
@@ -556,9 +576,11 @@ The experiment is successful only if all of these are demonstrated:
 - Cloud Agents: https://cursor.com/docs/cloud-agent
 - My Machines: https://cursor.com/docs/cloud-agent/self-hosted/my-machines
 - Self-Hosted Machines: https://cursor.com/docs/cloud-agent/self-hosted
-- Cloud Agent Settings: https://prod.cursor.com/docs/cloud-agent/settings
+- Cloud Agent Settings: https://cursor.com/docs/cloud-agent/settings
 - Models & Pricing: https://cursor.com/docs/models-and-pricing
-- Usage-based charges: https://prod.cursor.com/help/account-and-billing/overages
-- Spend limits: https://prod.cursor.com/help/account-and-billing/spend-limits
+- Grok Bot overview: https://cursor.com/docs/grok-bot
+- Grok Bot for Teams (Cloud Agent delegation toggle): https://cursor.com/docs/grok-bot/teams
+- Usage-based charges: https://cursor.com/help/account-and-billing/overages
+- Spend limits: https://cursor.com/help/account-and-billing/spend-limits
 
-**Documentation status:** checked against the current pages on September 14, 2026.
+**Documentation status:** original draft checked against Cursor/xAI pages on September 14, 2026; corrections in this revision checked against current pages on September 15, 2026.
