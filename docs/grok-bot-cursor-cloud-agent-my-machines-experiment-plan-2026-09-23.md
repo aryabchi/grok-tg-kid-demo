@@ -435,9 +435,9 @@ File appears in the dedicated clone on Windows
 
 Verify on the laptop:
 
-- [ ] The file is physically present in the dedicated clone.
-- [ ] `git status` shows only that file. No commit, no push, HEAD unchanged from the SHA you recorded.
-- [ ] The dashboard run's environment is `my-windows-laptop`.
+- [x] The file is physically present in the dedicated clone.
+- [x] `git status` shows only that file. No commit, no push, HEAD unchanged from the SHA you recorded.
+- [x] The dashboard run's environment is `my-windows-laptop`.
 
 This step isolates **Cursor Cloud Agent ↔ worker** from the Grok Bot integration.
 
@@ -451,11 +451,11 @@ Do not rely only on the final textual answer, and do not treat "a file exists so
 
 Good proof signals, checked on the dedicated clone after the run:
 
-- [ ] The created file is physically present in that clone.
-- [ ] `hostname` in the file matches this laptop.
-- [ ] Branch name and `git remote -v` in the file match what you recorded before the run.
-- [ ] HEAD is unchanged, and `git status` shows only the intended file.
-- [ ] The dashboard environment is `my-windows-laptop`.
+- [x] The created file is physically present in that clone.
+- [x] `hostname` in the file matches this laptop.
+- [x] Branch name and `git remote -v` in the file match what you recorded before the run.
+- [x] HEAD is unchanged, and `git status` shows only the intended file.
+- [x] The dashboard environment is `my-windows-laptop`.
 
 Optional extra signals, still inside the clone:
 
@@ -504,9 +504,9 @@ xAI's engineering guide says Grok Bot can create and manage Cursor Cloud Agents 
 
 Before the Grok task:
 
-- [ ] Worker process is still running. Laptop is awake.
-- [ ] Dedicated clone is still on the disposable branch, and you have noted the new HEAD if §4 left the test file uncommitted.
-- [ ] You will judge success from the Cursor dashboard environment field, not from Grok Bot's self-report.
+- [x] Worker process is still running. Laptop is awake.
+- [x] Dedicated clone is still on the disposable branch, and you have noted the new HEAD if §4 left the test file uncommitted.
+- [x] You will judge success from the Cursor dashboard environment field, not from Grok Bot's self-report.
 
 Reference:
 
@@ -536,29 +536,29 @@ Collect evidence at each layer.
 
 ### Layer A — Grok Bot
 
-- [ ] Grok Bot accepted the engineering task.
-- [ ] Grok Bot created or managed a Cursor Cloud Agent, visible as a run in Cursor.
-- [ ] Grok Bot could inspect the Cloud Agent result or transcript.
-- [ ] Grok Bot could issue a follow-up if needed.
-- [ ] The task was not completed only on Grok Bot's cloud computer or via Grok Bot local execution.
+- [x] Grok Bot accepted the engineering task.
+- [x] Grok Bot created or managed a Cursor Cloud Agent, visible as a run in Cursor.
+- [x] Grok Bot could inspect the Cloud Agent result or transcript.
+- [x] Grok Bot could issue a follow-up if needed.
+- [x] The task was not completed only on Grok Bot's cloud computer or via Grok Bot local execution.
 
 
 
 ### Layer B — Cursor Cloud Agent
 
-- [ ] Cloud Agent run exists in Cursor. Record the run id.
-- [ ] Record the pinned default, the model the spawn requested, and the model on the usage page.
-- [ ] Cloud Agent performed reasoning and issued tool calls.
-- [ ] Cloud Agent was associated with the intended repository and disposable branch.
+- [x] Cloud Agent run exists in Cursor. Record the run id.
+- [x] Record the pinned default, the model the spawn requested, and the model on the usage page.
+- [x] Cloud Agent performed reasoning and issued tool calls.
+- [x] Cloud Agent was associated with the intended repository and disposable branch.
 
 
 
 ### Layer C — My Machines worker
 
-- [ ] Dashboard environment for that run id is `my-windows-laptop`. Grok Bot's self-report is recorded and then checked against this.
-- [ ] The new file is in the dedicated clone on the laptop.
-- [ ] Shell output in the transcript matches a command you can reproduce in that clone.
-- [ ] `git status` shows only the intended new file. HEAD is unchanged. Nothing was pushed.
+- [x] Dashboard environment for that run id is `my-windows-laptop`. Grok Bot's self-report is recorded and then checked against this.
+- [x] The new file is in the dedicated clone on the laptop.
+- [x] Shell output in the transcript matches a command you can reproduce in that clone.
+- [x] `git status` shows only the intended new file. HEAD is unchanged. Nothing was pushed.
 
 
 
@@ -570,10 +570,10 @@ Run the success path and the retry path as two separate tasks, on a clean unders
 
 Use the §6 task as the success path. Its checkable criteria are: the file exists in the dedicated clone with the four required lines, `<test command>` output is reported exactly, the dashboard environment is `my-windows-laptop`, and git HEAD is unchanged.
 
-- [ ] Cloud Agent completes on the first attempt, with no errors.
-- [ ] Grok Bot checks the file contents and the dashboard environment, not only the agent's closing message.
-- [ ] Grok Bot reports completion with the run id and the command output.
-- [ ] Grok Bot does not trigger another run after those checks pass.
+- [x] Cloud Agent completes on the first attempt, with no errors.
+- [x] Grok Bot checks the file contents and the dashboard environment, not only the agent's closing message.
+- [x] Grok Bot reports completion with the run id and the command output.
+- [x] Grok Bot does not trigger another run after those checks pass.
 
 
 
@@ -606,9 +606,9 @@ The first attempt fails until something writes `marker.txt` containing exactly `
 - [ ] That output reaches Grok Bot.
 - [ ] Grok Bot treats it as a failure.
 - [ ] Grok Bot sends a correction without you intervening.
-- [ ] Retry succeeds, `marker.txt` exists only in the dedicated clone, and `check_marker.py` is unchanged.
-- [ ] Grok Bot confirms with the script output and the dashboard environment.
-- [ ] Record: number of retries, whether Grok Bot handed the task back to you, and total time.
+- [x] Retry succeeds, `marker.txt` exists only in the dedicated clone, and `check_marker.py` is unchanged.
+- [x] Grok Bot confirms with the script output and the dashboard environment.
+- [x] Record: number of retries, whether Grok Bot handed the task back to you, and total time.
 
 Expected pattern:
 
